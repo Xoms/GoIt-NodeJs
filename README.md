@@ -119,5 +119,7 @@ node index.js --action="remove" --id=3
 
 ## Скриншоты:
 
-![preview](./assets/hw1_1.jpg) ![preview](./assets/hw1_2.jpg)
-![preview](./assets/hw1_3.jpg) ![preview](./assets/hw1_4.jpg)
+![preview](./assets/hw1_1.jpg) 
+![preview](./assets/hw1_2.jpg)
+![preview](./assets/hw1_3.jpg) 
+![preview](./assets/hw1_4.jpg)
