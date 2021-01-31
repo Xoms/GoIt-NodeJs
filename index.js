@@ -1,8 +1,10 @@
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
+const dotenv = require('dotenv')
 const contactsRouter = require('./routes/contacts.routes');
 
+dotenv.config();
 const PORT = process.env.port || 8080;
 
 class Server {
