@@ -1,7 +1,7 @@
 {
   "name": "goit-nodejs",
   "version": "1.0.0",
-  "description": "NodeJs hw-01 GoIt",
+  "description": "NodeJs homework GoIt",
   "main": "index.js",
   "scripts": {
     "dev": "nodemon index.js localhost 8080",

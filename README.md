@@ -24,7 +24,7 @@ REST API должен поддерживать следующие рауты.
 - вызывает функцию `listContacts` для работы с json-файлом contacts.json
 - возвращает массив всех контактов в json-формате со статусом 200
 
-### @ GET /api/contacts/:contactId
+### @ GET /api/contacts/  
 
 - Не получает body
 - Получает параметр `contactId`
