@@ -1,125 +1,69 @@
-**Читать на других языках: [Русский](README.md), [Українська](README.ua.md).**
 
-# Домашнее задание 1
+# Домашнее задание 2
 
-\# FS, yargs Создай ветку `01-node-basics` из ветки `master`.
+Создай ветку `02-express` из ветки `master`.
+
+Написать REST API для работы с коллекцией контактов. Для работы с REST API
+используй [Postman](https://www.getpostman.com/).
 
 ## Шаг 1
 
-- Инициализируй npm в проекте
-- В корне проекта создай файл `index.js`
-- Поставь пакет [nodemon](https://www.npmjs.com/package/nodemon) как зависимость
-  разработки (devDependencies)
-- В файле `package.json` добавь "скрипты" для запуска `index.js`
-  - Скрипт `start` который запускает `index.js` с помощью `node`
-  - Скрипт `dev` который запускает `index.js` с помощью `nodemon`
+Добавь в проект пакеты [express](https://www.npmjs.com/package/express),
+[morgan](https://www.npmjs.com/package/morgan) и
+[cors](https://www.npmjs.com/package/cors).
 
 ## Шаг 2
 
-В корне проекта создай папку `db`. Для хранения контактов скачай и используй
-файл [contacts.json](./contacts.json), положив его в папку `db`.
+В index.js веб сервер на express и добавляем прослойки morgan и cors. Настраивай
+раутинг для работы с коллекцией контактов.
 
-В корне проекта создай файл `contacts.js`.
+REST API должен поддерживать следующие рауты.
 
-- Сделай импорт модулей `fs` и `path` для работы с файловой системой
-- Создай переменную `contactsPath` и запиши в нее путь к файле `contacts.json`.
-  Для составления пути ипользуй методы модуля `path`.
-- Добавь функции для работы с коллекцией контактов. В функциях используй модуль
-  `fs` и его методы `readFile()` и `writeFile()`
-- Сделай экспорт созданных функций через `module.exports`
+### @ GET /api/contacts
 
-```js
-// contacts.js
+- ничего не получает
+- вызывает функцию `listContacts` для работы с json-файлом contacts.json
+- возвращает массив всех контактов в json-формате со статусом 200
 
-/*
- * Раскомментируй и запиши значение
- * const contactsPath = ;
- */
+### @ GET /api/contacts/  
 
-// TODO: задокументировать каждую функцию
-function listContacts() {
-  // ...твой код
-}
+- Не получает body
+- Получает параметр `contactId`
+- вызывает функцию getById для работы с json-файлом contacts.json
+- если такой id есть, возвращает обьект контакта в json-формате со статусом 200
+- если такого id нет, возвращает json с ключом `"message": "Not found"` и
+  статусом 404
 
-function getContactById(contactId) {
-  // ...твой код
-}
+### @ POST /api/contacts
 
-function removeContact(contactId) {
-  // ...твой код
-}
+- Получает body в формате `{name, email, phone}`
+- Если в body нет каких-то обязательных полей, возарщает json с ключом
+  `{"message": "missing required name field"}` и статусом 400
+- Если с body все хорошо, добавляет уникальный идентификатор в обьект контакта
+- Вызывает функцию `addContact(body)` для сохранения контакта в файле
+  contacts.json
+- По результату работы функции возвращает обьект с добавленным id
+  `{id, name, email, phone}` и статусом 201
 
-function addContact(name, email, phone) {
-  // ...твой код
-}
-```
+### @ DELETE /api/contacts/:contactId
 
-## Шаг 3
+- Не получает body
+- Получает параметр `contactId`
+- вызывает функцию `removeContact` для работы с json-файлом contacts.json
+- если такой id есть, возвращает json формата `{"message": "contact deleted"}` и
+  статусом 200
+- если такого id нет, возвращает json с ключом `"message": "Not found"` и
+  статусом 404
 
-Сделай импорт модуля `contacts.js` в файле `index.js` и проверь
-работоспособность функций для работы с контактами.
+### @ PATCH /api/contacts/:contactId
 
-## Шаг 4
+- Получает параметр `contactId`
+- Получает body в json-формате c обновлением любых полей `name, email и phone`
+- Если body нет, возарщает json с ключом `{"message": "missing fields"}` и
+  статусом 400
+- Если с body все хорошо, вызывает функцию `updateContact(contactId, body)`
+  (напиши ее) для обновления контакта в файле contacts.json
+- По результату работы функции возвращает обновленный обьект контакта и
+  статусом 200. В противном случае, возвращает json с ключом
+  `"message": "Not found"` и статусом 404
 
-В файле `index.js` импортируется пакет `yargs` для удобного парса аргументов
-командной строки. Используй готовую функцию `invokeAction()` которая получает
-тип выполняемого действия и необходимые аргументы. Функция вызывает
-соответствующий метод из файла `contacts.js` передавая ему необходимые
-аргументы.
-
-```js
-// index.js
-const argv = require('yargs').argv;
-
-// TODO: рефакторить
-function invokeAction({ action, id, name, email, phone }) {
-  switch (action) {
-    case 'list':
-      // ...
-      break;
-
-    case 'get':
-      // ... id
-      break;
-
-    case 'add':
-      // ... name email phone
-      break;
-
-    case 'remove':
-      // ... id
-      break;
-
-    default:
-      console.warn('\x1B[31m Unknown action type!');
-  }
-}
-
-invokeAction(argv);
-```
-
-## Шаг 5
-
-Запусти команды в терминале и сделай отдельный скриншот результата выполнения
-каждой команды.
-
-```shell
-# Получаем и выводим весь список контакстов в виде таблицы (console.table)
-node index.js --action="list"
-
-# Получаем контакт по id
-node index.js --action="get" --id=5
-
-# Добавялем контакт
-node index.js --action="add" --name="Mango" --email="mango@gmail.com" --phone="322-22-22"
-
-# Удаляем контакт
-node index.js --action="remove" --id=3
-```
-
-## Скриншоты:
-
-![preview](./assets/hw1_1.jpg) 
-![preview](./assets/hw1_2.jpg)
-![preview](./assets/hw1_3.jpg) 
-![preview](./assets/hw1_4.jpg)
