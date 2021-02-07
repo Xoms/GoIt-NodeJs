@@ -26,11 +26,14 @@ class ContactController {
         
          try {            
             const contact = await Contact.findById(contactId);
-            res.json(contact);
+            console.log(contact);
+           
             
             if (!contact) {
-                return res.status(404).send("Contact isn't found");
+                return res.status(404).json({ "message":"Not found" });
             }
+            
+            res.json(contact);
             
         } catch (err) {
             errorHandler(err, 500);
@@ -56,10 +59,10 @@ class ContactController {
 
         try {
             const deletedContact = await Contact.findByIdAndDelete(contactId);
-            res.status(200).json({ "message": "contact deleted" });
+            res.status(200).json({ "message":"Contact deleted" });
 
             if (!deletedContact) {
-                return res.status(404).send("Contact isn't found");
+                return res.status(404).json({ "message":"Not found" });
             }
 
         } catch (err) {
@@ -78,7 +81,7 @@ class ContactController {
             });
 
             if (!updatedContact) {
-                return res.status(404).send("Contact isn't found");
+                return res.status(404).json({ "message":"Not found" });
             }
 
             res.json(updatedContact);
@@ -126,7 +129,7 @@ class ContactController {
         } = req;
 
         if (!ObjectId.isValid(contactId)) {
-            return res.status(400).send('Your id is not valid');
+            return res.status(400).json({ "message":"Your id is not valid" });
         }
 
         /* OR

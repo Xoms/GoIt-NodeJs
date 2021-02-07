@@ -2,24 +2,26 @@
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
-const dotenv = require('dotenv')
+const dotenv = require('dotenv');
 const contactsRouter = require('./routes/contacts.routes');
 const mongoose = require('mongoose');
 
 dotenv.config();
 const PORT = process.env.PORT || 8080;
-const DB_URI = process.env.MONGO_URI;
+const DB_URI = process.env.DB_URI;
 
 class Server {
     start() {
         this.server = express();
         this.initMiddlewares();
         this.initRoutes();
+        this.connectToDb();
         this.listen();
     }
 
     initMiddlewares() {
         this.server.use(express.json());
+        this.server.use(express.static('public'));
         this.server.use(
             cors({
                 origin: '*',
@@ -34,6 +36,7 @@ class Server {
 
     connectToDb = async () => {
         try {
+            console.log(DB_URI);
             await mongoose.connect(DB_URI, {
                 useNewUrlParser: true,
                 useUnifiedTopology: true,
