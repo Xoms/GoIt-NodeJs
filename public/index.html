@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contacts REST API</title>
+    <style>
+        main {
+            padding: 30px 30px;
+        }
+        .endpoints-list{
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <h1>
+            Welcome!
+        </h1>
+        <p></p>
+        <p>Use next endpoints for:</p>
+        <ul class="endpoints-list">
+            <li class="endpoints-list__item">
+                <h2>
+                    @ GET /api/contacts
+                </h2>
+                <ul>
+                    <li>Gets nothing</li>
+                    <li>Returns an array of all contacts in json format with status 200</li>
+                </ul>
+            </li>
+            <li class="endpoints-list__item">
+                <h2>
+                    @ GET /api/contacts/:contactId
+                </h2>
+                <ul>
+                    <li>Doesn't get body</li>
+                    <li>Gets the `contactId` parameter of type ObjectId</li>
+                    <li>If id is not valid ObjectId - returns error "message":"Your id is not valid" with status 400</li>
+                    <li>If there is such an id, it returns the contact object in json format with the status 200</li>
+                    <li>if there is no such id, it returns json with the key `"message":"Not found"` and
+                        404 status</li>
+                </ul>
+            </li>
+            <li class="endpoints-list__item">
+                <h2>
+                    @ POST /api/contacts
+                </h2>
+                <ul>
+                    <li>Gets a body in the format `{name, email, phone}`, all fields are required</li>
+                    <li>If there are missing required fields in the body, it returns an joi validation error object with a status of 400</li>
+                    <li>If everything is fine with body, saves the new contact to the database</li>
+                    <li>returns an object with an added id
+                    `{_id, name, email, phone}` and status 201</li>
+                </ul>
+            </li>
+            <li class="endpoints-list__item">
+                <h2>
+                    @ DELETE /api/contacts/:contactId
+                </h2>
+                <ul>
+                    <li>Doesn't get body</li>
+                    <li>Gets the `contactId` parameter of type ObjectId</li>
+                    <li>If id is not valid ObjectId - returns error "message":"Your id is not valid" with status 400</li>
+                    <li>if there is such an id, it returns json of the format `{"message":"Contact deleted"}` and
+                        status 200</li>
+                    <li>if there is no such id, it returns json with the key `" message ":" Not found "` and
+                        404 status</li>
+                </ul>
+            </li>
+            <li class="endpoints-list__item">
+                <h2>
+                    @ PATCH /api/contacts/:contactId
+                </h2>
+                <ul>
+                    <li>Gets the `contactId` parameter of type ObjectId</li>
+                    <li>If id is not valid ObjectId - returns error "message":"Your id is not valid" with status 400</li>
+                    <li>Receives body in json-format with updating of any fields `name, email and phone`, one of the listed is required</li>
+                    <li>If there are missing required fields or wrong fields in the body, it returns an 
+                        joi validation error object with a status of 400
+                    </li>
+                    <li>If everything is fine with body, updates the contact in the database </li>
+                    <li>Returns the updated contact object and status 200.</li>
+                    <li>if there is no such id, it returns json with the key `" message ":" Not found "` and
+                        404 status</li>
+                </ul>
+            </li>
+        </ul>
+    </main>
+</body>
+</html>
