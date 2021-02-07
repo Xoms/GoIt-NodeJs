@@ -47,6 +47,7 @@ class ContactController {
         try {
             const createdContact = await Contact.create(body);
             res.status(201).json(createdContact);
+            //непонятно зачем поле "__v": 0
         } catch (err) {
             errorHandler(err, 500);
         }
@@ -71,22 +72,21 @@ class ContactController {
     };
 
     updateContact = async (req, res) => {
-        try {
-            const {
+        const {
                 params: { contactId },
-            } = req;
+        } = req;
 
-            const updatedContact = Contact.findByIdAndUpdate(contactId, req.body, {
+        try {
+            const updatedContact = await Contact.findByIdAndUpdate(contactId, req.body, {
                 new: true,
             });
-
             if (!updatedContact) {
                 return res.status(404).json({ "message":"Not found" });
             }
 
             res.json(updatedContact);
         } catch (err) {
-            errorHandler(err, 500);
+            errorHandler(err, 500, res);
         }
 
     };
@@ -103,7 +103,6 @@ class ContactController {
         if (validationResult.error) {            
             return res.status(400).send(validationResult.error);
         }
-
         next();
     }
 
@@ -119,7 +118,6 @@ class ContactController {
         if (validationResult.error) {
             return res.status(400).send(validationResult.error);
         }
-
         next();
     }
 
