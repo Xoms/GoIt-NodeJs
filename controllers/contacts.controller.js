@@ -1,55 +1,51 @@
-const contacts = require('../model/Contacts');
+const Contact = require('../model/Contact');
 const Joi = require('joi');
-const Contacts = require('../model/Contacts');
+Joi.objectId = require('joi-objectid')(Joi);
+const {
+    Types: { ObjectId },
+} = require('mongoose');
+const errorHandler = require('../helpers/errorHandler');
 
-class ContactController {
-    
-    //helper
-    findContactIndex = async (id) => {
-        const contactId = +id;
-        const data = await contacts.listContacts(); 
-        console.log(data);
-        return data.findIndex(({ id }) => id === contactId);
-        
-    };
+
+class ContactController {    
 
     //API
-    async getContacts(req, res) {
+    getContacts = async (req, res) => {
         try {            
-            const data = await contacts.listContacts();
+            const data = await Contact.find();
             res.json(data);
         } catch (err) {
-            console.error(err);            
-            res.status(500).send(err.message); 
+            errorHandler(err, 500);
         };
     }
 
-    async getContactById(req, res) {
+    getContactById = async (req, res) => {
         const {
             params: { contactId },
         } = req;
-        console.log(contactId);
-        try {
-            const data = await contacts.getById(contactId);
-            console.log(data);
-            res.json(data);
-
+        
+         try {            
+            const contact = await Contact.findById(contactId);
+            res.json(contact);
+            
+            if (!contact) {
+                return res.status(404).send("Contact isn't found");
+            }
+            
         } catch (err) {
-            console.error(err);
-            res.status(500).send(err.message); 
+            errorHandler(err, 500);
         }; 
     
     }
 
-    async createContact(req, res) {
-        const { body: {name, email, phone} } = req;
+    createContact = async (req, res) =>{
+        const { body } = req;
         
         try {
-            const createdContact = await contacts.addContact(name, email, phone);
+            const createdContact = await Contact.create(body);
             res.status(201).json(createdContact);
         } catch (err) {
-            console.error(err);
-            res.status(500).send(err.message); 
+            errorHandler(err, 500);
         }
     }
 
@@ -59,11 +55,15 @@ class ContactController {
         } = req;
 
         try {
-            await contacts.removeContact(contactId);
-            res.status(200).json({"message": "contact deleted"});
+            const deletedContact = await Contact.findByIdAndDelete(contactId);
+            res.status(200).json({ "message": "contact deleted" });
+
+            if (!deletedContact) {
+                return res.status(404).send("Contact isn't found");
+            }
+
         } catch (err) {
-            console.error(err);
-            res.status(500).send(err.message);
+            errorHandler(err, 500);
         }        
     };
 
@@ -73,12 +73,17 @@ class ContactController {
                 params: { contactId },
             } = req;
 
-            const updatedContact = await contacts.updateContact(contactId, req.body);
+            const updatedContact = Contact.findByIdAndUpdate(contactId, req.body, {
+                new: true,
+            });
+
+            if (!updatedContact) {
+                return res.status(404).send("Contact isn't found");
+            }
 
             res.json(updatedContact);
         } catch (err) {
-            console.error(err);
-            res.status(500).send(err.message);
+            errorHandler(err, 500);
         }
 
     };
@@ -90,10 +95,9 @@ class ContactController {
             email: Joi.string().required(),
             phone: Joi.string().required(),
         });
-        console.log(req.body);
         const validationResult = validationRules.validate(req.body);
 
-        if (validationResult.error) {
+        if (validationResult.error) {            
             return res.status(400).send(validationResult.error);
         }
 
@@ -105,7 +109,7 @@ class ContactController {
             name: Joi.string(),
             email: Joi.string(),
             password: Joi.string(),
-        });
+        }).min(1);
 
         const validationResult = validationRules.validate(req.body);
 
@@ -116,24 +120,27 @@ class ContactController {
         next();
     }
 
-    validateContactId = async (req, res, next) => {
-        try {
-             const {
+    validateContactId = (req, res, next) => {
+        const {
             params: { contactId },
-            } = req;
-            
-            const contactIndex = await this.findContactIndex(+contactId);
-            console.log(contactId);
-            if (contactIndex === -1) {
-                return res.status(404).json({message: 'Not found'});
-            }
-            next();
-        } catch (err) {
-            next(err);
-        }
-       
+        } = req;
 
+        if (!ObjectId.isValid(contactId)) {
+            return res.status(400).send('Your id is not valid');
+        }
+
+        /* OR
+        const validationRules = Joi.object({
+            contactId: Joi.objectId().required
+        });
+        const validationResult = validationRules.validate({contactId});
+
+        if (validationResult.error) {
+            return res.status(400).send(validationResult.error);
+        }
+        */
         
+        next();
     }
 }
 

@@ -4,9 +4,11 @@ const cors = require('cors');
 const morgan = require('morgan');
 const dotenv = require('dotenv')
 const contactsRouter = require('./routes/contacts.routes');
+const mongoose = require('mongoose');
 
 dotenv.config();
 const PORT = process.env.PORT || 8080;
+const DB_URI = process.env.MONGO_URI;
 
 class Server {
     start() {
@@ -28,6 +30,19 @@ class Server {
 
     initRoutes() {
         this.server.use('/api/contacts', contactsRouter);
+    }
+
+    connectToDb = async () => {
+        try {
+            await mongoose.connect(DB_URI, {
+                useNewUrlParser: true,
+                useUnifiedTopology: true,
+            });
+            console.log("Database connection successful");
+        } catch (err) {
+            console.log(err);
+            process.exit(1)
+        }
     }
 
     listen() {
