@@ -1,9 +1,10 @@
-
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
 const dotenv = require('dotenv');
-const contactsRouter = require('./routes/contacts.routes');
+const contactsRouter = require('./Contacts/contacts.routes');
+const authRouter = require('./Auth/auth.routes');
+const userRouter = require('./User/user.routes');
 const mongoose = require('mongoose');
 
 dotenv.config();
@@ -32,6 +33,8 @@ class Server {
 
     initRoutes() {
         this.server.use('/api/contacts', contactsRouter);
+        this.server.use('/auth', authRouter);
+        this.server.use('/users', userRouter);
     }
 
     connectToDb = async () => {

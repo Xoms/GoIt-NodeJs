@@ -1,19 +1,38 @@
-const Contact = require('../model/Contact');
+const Contact = require('./Contact');
 const Joi = require('joi');
 Joi.objectId = require('joi-objectid')(Joi);
+const getPagination = require('../helpers/getPagination');
 const {
     Types: { ObjectId },
 } = require('mongoose');
 const errorHandler = require('../helpers/errorHandler');
 
 
-class ContactController {    
+class ContactController {
+    
 
     //API
     getContacts = async (req, res) => {
-        try {            
-            const data = await Contact.find();
-            res.json(data);
+        const {
+            query: { sub, page, limit }
+        } = req;
+
+        const { offset, size } = getPagination(page, limit);
+
+        const condition = sub ? {
+            subscription: sub
+        } : {};
+
+        try {
+            const data = await Contact.paginate(condition, { offset, limit: size })
+            console.log(size);
+            console.log(offset);
+            res.json({  
+                total: data.totalDocs,
+                contacts: data.docs,
+                totalPages: data.totalPages,
+                page: data.page
+            });
         } catch (err) {
             errorHandler(err, 500);
         };
@@ -25,9 +44,7 @@ class ContactController {
         } = req;
         
          try {            
-            const contact = await Contact.findById(contactId);
-            console.log(contact);
-           
+            const contact = await Contact.findById(contactId);           
             
             if (!contact) {
                 return res.status(404).json({ "message":"Not found" });
@@ -47,7 +64,6 @@ class ContactController {
         try {
             const createdContact = await Contact.create(body);
             res.status(201).json(createdContact);
-            //непонятно зачем поле "__v": 0
         } catch (err) {
             errorHandler(err, 500);
         }
@@ -65,7 +81,6 @@ class ContactController {
             if (!deletedContact) {
                 return res.status(404).json({ "message":"Not found" });
             }
-
         } catch (err) {
             errorHandler(err, 500);
         }        
@@ -119,6 +134,22 @@ class ContactController {
             return res.status(400).send(validationResult.error);
         }
         next();
+    }
+
+    validateQueryParams (req, res, next) {
+        const validationRules = Joi.object({
+            sub: Joi.string().valid('free', 'pro', 'premium'),
+            page: Joi.number().min(1),
+            limit: Joi.number().min(1).max(20),
+        });
+    
+        const validationResult = validationRules.validate(req.query);
+
+        if (validationResult.error) {
+            return res.status(400).send(validationResult.error);
+        }
+        next();
+    
     }
 
     validateContactId = (req, res, next) => {
