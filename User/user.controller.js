@@ -45,7 +45,8 @@ class UserController {
         try {
             console.log("User in controller", user);
             console.log(user.avatarURL);
-            const updatedUser = User.findByIdAndUpdate(user._id, user);
+            const updatedUser = await User.findByIdAndUpdate(user._id, user);
+            console.log(updatedUser)
             return res.json({ avatarURL: user.avatarURL });
         } catch (error) {
             errorHandler(error, 500);
