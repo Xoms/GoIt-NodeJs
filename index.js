@@ -58,4 +58,7 @@ class Server {
 }
 
 const server = new Server();
+
+
+module.exports = server;
 server.start();
