@@ -1,8 +1,12 @@
-const User = require('../User/User');
+const crypto = require('crypto');
+
 const Joi = require('joi');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
+
+const User = require('../User/User');
+const VerificationToken = require('../EmailVerificationToken/EmailVerificationToken');
 const errorHandler = require('../helpers/errorHandler');
 
 dotenv.config();
@@ -10,15 +14,17 @@ dotenv.config();
 class AuthController {
     //Helper
     updateUser = async (id, body, res) => {
-        try{
-            const updatedUser = await User.findByIdAndUpdate(id, body);
-            if (!updatedUser) {
-                return res.status(404).json({ "message":"Not found" });
-            }
-        } catch (err) {
-            throw err;
+        const updatedUser = await User.findByIdAndUpdate(id, body);
+        if (!updatedUser) {
+            return res.status(404).json({ "message":"Not found" });
         }
     }
+
+    generateVerificationToken = async (uid) => {
+        const token = await crypto.randomBytes(16).toString('hex');
+        return await VerificationToken.create({token, uid})
+    }
+    
     //API
     register = async (req, res) => {
         const { body } = req;
@@ -31,11 +37,13 @@ class AuthController {
             const hashedPassword = await bcrypt.hash(password, 14);
             const subscription = body.subscription ? body.subscription : "free";
 
-            await User.create({
+            const user =  await User.create({
                 ...body,
                 password: hashedPassword,
                 subscription
             });
+
+            const createdToken = await this.generateVerificationToken(user._id);
             
             const createdUser = {
                 email,
