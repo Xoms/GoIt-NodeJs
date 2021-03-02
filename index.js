@@ -1,15 +1,20 @@
 const express = require('express');
+
 const cors = require('cors');
 const morgan = require('morgan');
 const dotenv = require('dotenv');
+const mongoose = require('mongoose');
+const sgMail = require('@sendgrid/mail')
+
 const contactsRouter = require('./Contacts/contacts.routes');
 const authRouter = require('./Auth/auth.routes');
 const userRouter = require('./User/user.routes');
-const mongoose = require('mongoose');
 
 dotenv.config();
+
 const PORT = process.env.PORT || 8080;
 const DB_URI = process.env.DB_URI;
+sgMail.setApiKey(process.env.SENDGRID_API_KEY)
 
 class Server {
     start() {
