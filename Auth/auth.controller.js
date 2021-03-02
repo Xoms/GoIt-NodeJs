@@ -3,6 +3,7 @@ const crypto = require('crypto');
 const Joi = require('joi');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const sgMail = require('@sendgrid/mail')
 const dotenv = require('dotenv');
 
 const User = require('../User/User');
@@ -12,7 +13,7 @@ const errorHandler = require('../helpers/errorHandler');
 dotenv.config();
 
 class AuthController {
-    //Helper
+    //Helpers
     updateUser = async (id, body, res) => {
         const updatedUser = await User.findByIdAndUpdate(id, body);
         if (!updatedUser) {
@@ -23,6 +24,22 @@ class AuthController {
     generateVerificationToken = async (uid) => {
         const token = await crypto.randomBytes(16).toString('hex');
         return await VerificationToken.create({token, uid})
+    }
+
+    sendVerificationEmail = async (email, token) => {
+
+        const API_URL = 'http://localhost:8080/auth/verify'
+        const msg = {
+            to: email,
+            from: 'cilcksensead@gmail.com',
+            subject: 'Test Account Verification',
+            html: `<h1>Welcome to our application</h1>
+            <p>We need you to verify your email, if you registered at blablalbla, please follow this link:</p>
+            <a href="${API_URL}/${token}">verify email</a>`,
+        }
+
+        await sgMail.send(msg);
+        console.log('Email sent')
     }
     
     //API
@@ -44,6 +61,8 @@ class AuthController {
             });
 
             const createdToken = await this.generateVerificationToken(user._id);
+
+            await this.sendVerificationEmail(email, createdToken.token);
             
             const createdUser = {
                 email,
@@ -55,6 +74,34 @@ class AuthController {
         } catch (err) {
             errorHandler(err, 500);
         }
+    }
+
+    verifyEmail = async (req, res) => {
+        const { token } = req.params;
+
+        try {
+
+            const tokenRecord = await VerificationToken.findOne({ token })
+            
+            if (!tokenRecord) {
+                return res.status(404).json({"message": "Verification token invalid"});
+            }
+
+            const user = await User.findByIdAndUpdate(tokenRecord.uid, )
+            if (!user) {
+                return res.status(404).json({"message": "User not found"});
+            }
+
+            user.isVerified = true;
+            await user.save()
+            await VerificationToken.findByIdAndDelete(tokenRecord._id);
+            res.sendStatus(200);
+
+        } catch (err) {
+            errorHandler(err, 500);
+        }
+
+
     }
 
     login = async (req, res) => {

@@ -1,113 +1,83 @@
-# Домашнее задание 5
+# Домашнее задание 6
 
-Создай ветку `05-images` из ветки `master`.
+Создай ветку `06-email` из ветки `master`.
 
-Продолжи создание REST API для работы с коллекцией контактов. Добавь возможность
-загрузки аватарки пользователя через
-[Multer](https://github.com/expressjs/multer).
+Продолжи создание REST API для работы с коллекцией контактов. Добавь верификацию
+email'а пользователя после регистрации при помощи
+[SendGrid](https://sendgrid.com/).
+
+## Как должно работать в конечном счете
+
+Как пользователь, я должен:
+
+1. При регистрации, получить письмо на указанную при регистрации почту с ссылкой
+   для верификации email'а
+2. Пройдя по ней в первый раз, я должен получить
+   [Ответ со статусом 200](#verification-success-response), что будет
+   подразумевать успешную верификацию email'a
+3. Пройдя по ней второй, третий раз, я должен получить
+   [Ошибку со статусом 404](#verification-user-not-found)
 
 ## Шаг 1
 
-Создай папку `public` для раздачи статики. В этой папке сделай папку `images`.
-Настрой Express на раздачу статических файлов из папки `public`.
+### Подготовка интеграции с SendGrid API
 
-Положи любое изображение в папку `public/images` и проверь что раздача статики
-работает. При переходе по такому URL браузер отобразит изображение.
-
-```shell
-http://locahost:<порт>/images/<имя файла с расширением>
-```
+- Зарегистрируйся на [SendGrid](https://sendgrid.com/).
+- Создай
+  [email-отправителя](https://app.gitbook.com/@reloaderlev/s/goit-node-js-new-program/email-rozsilka/sendgrid.-stvorennya-email-vidpravnika)
+- [получи API-токен](https://app.gitbook.com/@reloaderlev/s/goit-node-js-new-program/email-rozsilka/sendgrid.-stvorennya-akauntu-i-api-tokena)
+- добавь API-токен в `.env` файл
 
 ## Шаг 2
 
-В схему пользователя добавь новое свойство `avatarURL` для хранения изображения.
+### Создание ендпоинта для верификации email'а
+
+- добавить в модель `User` поле `verificationToken`. Присутствие токена в
+  документе пользователя будет подразумевать, что его email еще не прошел
+  верификацию
+- создать ендпоинт GET
+  [`/auth/verify/:verificationToken`](#verification-request), где по
+  `verificationToken`'y мы будем искать пользователя в модели `User`
+- если пользователя с таким токеном нет, вернуть
+  [Ошибку NotFound](#verification-user-not-found)
+- если есть - удаляем `verificationToken` с документа пользователя и возвращаем
+  [Успешный ответ](#verification-success-response)
+
+### Verification request
 
 ```shell
-{
-  email: String,
-  password: String,
-  avatarURL: String,
-  subscription: {
-    type: String,
-    enum: ["free", "pro", "premium"],
-    default: "free"
-  }
-}
+GET /auth/verify/:verificationToken
 ```
 
-- Используй генератор аватарок для того чтобы при регистрации нового
-  пользователя сразу сгенерить ему аватар.
-- Создай папку `tmp` в корне проекта и сохраняй в неё созданную аватарку.
+### Verification user Not Found
+
+```shell
+Status: 404 Not Found
+ResponseBody: User not found
+```
+
+### Verification success response
+
+```shell
+Status: 200 OK
+```
 
 ## Шаг 3
 
-При регистрации пользователя:
+### Добавление отправки email'а пользователю с ссылкой для верификации
 
-- Создавай изображение испопользуя генератор аватарок из шага 2
-- Перенеси аватар из папки `tmp` в папку `public/images`
-- Создай URL для аватара. Например
-  `http://locahost:3000/images/<имя файла с расширением>`
-- Сохрани созданный URL в поле `avatarURL` во время создания пользователя
+После создания пользователя при регистрации:
+
+- создать `verificationToken` для зарегистрированного пользователя и записать
+  его в БД (для генерации токена используйте
+  [uuid](https://www.npmjs.com/package/uuid))
+- отправить email на почту пользователя и указать ссылку для верификации email'а
+  (`/auth/verify/:verificationToken`) в
+  [html сообщения](https://app.gitbook.com/@reloaderlev/s/goit-node-js-new-program/email-rozsilka/sendgrid.-vidpravka-email-iv-cherez-paket-sendgrid-mail)
 
 ## Шаг 4
 
-Добавь возможность обновления данных уже созданного пользователя, в том числе
-аватарки.
+### Проверка правильности работы
 
-![avatar upload from postman](./avatar-upload.png)
-
-```shell
-# Запрос
-PATCH /users/avatars
-Content-Type: multipart/form-data
-Authorization: "Bearer token"
-RequestBody: загруженный файл
-
-# Успешный ответ
-Status: 200 OK
-Content-Type: application/json
-ResponseBody: {
-  "avatarURL": "тут будет ссылка на изображение"
-}
-
-# Неуспешный ответ
-Status: 401 BAD
-Content-Type: application/json
-ResponseBody: {
-  "message": "Not authorized"
-}
-```
-
-## Дополнительное задание - необязательное
-
-### 1. Написать юнит-тесты для мидлвара по авторизации
-
-(при помощи [mocha](https://www.npmjs.com/package/mocha),
-[sinon](https://www.npmjs.com/package/sinon))
-
-- все методы и функции, вызываемые мидлваром (вместе с next) должны быть
-  заглушены при помощи sinon
-- нужно проверить количество вызовов заглушок и аргументы с которыми они
-  вызывались в случаях, когда:
-  - пользователь не передал токен в `Authorization` заголовке
-  - токен пользователя невалидный
-  - токен пользователя валидный
-
-```
-Подсказка:
-Иногда Вам может понадобится переопределить возвращаемые значения
-методов-заглушок
-```
-
-### 2. Написать приемочные тесты для ендпоинта обновления аватарок
-
-(дополнительно нужно будет использовать
-[supertest](https://www.npmjs.com/package/supertest))
-
-Тесты должны проверять:
-
-- возвращается ли ответ со статус кодом 401, если токен пользователя невалидный
-- В случае, если все прошло успешно, проверить:
-  - возвращается ли ответ со статус кодом 200
-  - возвращается ли тело ответа в правильном формате
-  - добавляется ли `avatarUrl` в документ целевого пользователя
+[Условия, указанные в начале задания](#как-должно-работать-в-конечном-счете),
+должны работать
